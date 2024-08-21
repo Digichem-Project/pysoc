@@ -21,10 +21,7 @@ class RWF_parser():
     """
     Class for parsing data from gaussian binary files (.rwf and .chk).
     """
-    
-    # Path/command to Gaussian's rwfdump.
-    RWFDUMP = "rwfdump"
-    
+      
     # A string that we look for in output files that indicates the real data is coming next.
     START_STRING = "Dump of file"
     
@@ -35,13 +32,15 @@ class RWF_parser():
     XY_COEFFS = '635R'
     AO_OVERLAP = '514R'
     
-    def __init__(self, rwf_file_name):
+    def __init__(self, rwf_file_name, rwfdump = "rwfdump"):
         """
         Constructor for RWF_parser objects.
         
         :param rwf_file_name: A file to read from. Both .rwf and .chk files are supported.
+        :param rwfdump: Path/command to Gaussian's rwfdump utility.
         """
         self.rwf_file_name = Path(rwf_file_name)
+        self.rwfdump = rwfdump
         
     def get_section(self, code):
         """
@@ -60,7 +59,7 @@ class RWF_parser():
         """
         try:
             rwfdump_proc =  subprocess.run(
-                [self.RWFDUMP, self.rwf_file_name.name, "-", code],
+                [self.rwfdump, self.rwf_file_name.name, "-", code],
                 # Capture both stdout and stderr.
                 stdout = subprocess.PIPE,
                 stderr = subprocess.STDOUT,
@@ -71,7 +70,7 @@ class RWF_parser():
             
             dumped_data = rwfdump_proc.stdout.split("\n")
             
-            #dumped_data =  str(subprocess.check_output([self.RWFDUMP, self.rwf_file_name, "-", code], universal_newlines = True)).split("\n")
+            #dumped_data =  str(subprocess.check_output([self.rwfdump, self.rwf_file_name, "-", code], universal_newlines = True)).split("\n")
         except subprocess.CalledProcessError:
             # rwfdump failed to run, check to see if the given .rwf file actually exists.
             if not self.rwf_file_name.exists():
@@ -110,7 +109,7 @@ class RWF_parser():
         :param num_records: The number of records to return from the extracted data. A negative number (the default) will return all available records.
         :return: The processed data (as a 1D list).
         """
-        # First, run RWFDUMP to get our data.
+        # First, run rwfdump to get our data.
         dumped_data = self.get_section(code)[1]
                 
         # Convert the remaining data to linear form.
@@ -143,7 +142,7 @@ class Gaussian_parser(Molsoc):
     # A mapping of subshell labels to number of orbitals (?)
     SHELLS = {"S": 1, "P": 3, "SP": 4, "D": 6, "F": 10}
     
-    def __init__(self, log_file_name, rwf_file_name, requested_singlets, requested_triplets):
+    def __init__(self, log_file_name, rwf_file_name, requested_singlets, requested_triplets, rwfdump = "rwfdump"):
         """
         Constructor for Gaussian_parser objects.
         
@@ -151,8 +150,10 @@ class Gaussian_parser(Molsoc):
         :param rwf_file_name: Name/path to the read-write file to parse.
         :param requested_singlets: A list of singlet excited states to calculate SOC for.
         :param requested_triplets: A list of triplet excited states to calculate SOC for.
+        :param rwfdump: Path/command to Gaussian's rwfdump utility.
         """
         super().__init__(requested_singlets, requested_triplets)
+        self.rwfdump = rwfdump
         
         # Save our input files.
         self.log_file_name = log_file_name
@@ -196,7 +197,7 @@ class Gaussian_parser(Molsoc):
         Parse output from the rwf file.
         """
         # Get our parser object.
-        rwf_parser = RWF_parser(self.rwf_file_name)
+        rwf_parser = RWF_parser(self.rwf_file_name, rwfdump = self.rwfdump)
         
         # Now extract each of the sections we require.
         

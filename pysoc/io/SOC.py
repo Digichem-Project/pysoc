@@ -17,6 +17,8 @@ class Calculator():
         num_singlets = None,
         num_triplets = None,
         QM_program = None,
+        *,
+        rwfdump = "rwfdump",
         **aux_files):
         """
         Main program function for PySOC controller program.
@@ -26,6 +28,7 @@ class Calculator():
         :param num_singlets: The number of singlet excited states to calculate SOC for. This should not exceed the number of singlets calculated by the QM program.
         :param num_triplets: The number of triplet excited states to calculate SOC for. This should not exceed the number of triplets calculated by the QM program.
         :param QM_program: A string identifying the QM program to interface with (currently, one of either 'Gaussian' or 'DFTB+'.
+        :param rwfdump: Path/command to Gaussian's rwfdump utility. Only useful if QM_program == "Gaussian".
         """
         # TODO: Because of issue #1, we don't allow selecting exact singlets/triplets, we just ask how many.
         requested_singlets = list(range(1, num_singlets +1)) if num_singlets is not None else None
@@ -50,7 +53,7 @@ class Calculator():
         # Get an appropriate parser.
         if QM_program == 'Gaussian':
             # Get our calculation parser.
-            self.molsoc = Gaussian_parser.from_output_files(calc_file, requested_singlets = requested_singlets, requested_triplets = requested_triplets, **aux_files)
+            self.molsoc = Gaussian_parser.from_output_files(calc_file, requested_singlets = requested_singlets, requested_triplets = requested_triplets, rwfdump = rwfdump, **aux_files)
             
             # Keywords for molsoc
             self.keywords = ['ANG', 'DIP']
