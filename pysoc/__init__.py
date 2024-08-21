@@ -12,7 +12,7 @@ description = "PySOC spin-orbit coupling calculations"
 development = False
 # Version information.
 major_version = 2
-minor_version = 3
+minor_version = 4
 revision = 0
 version_number = "{}.{}.{}".format(major_version, minor_version, revision)
 # The full version number of this package.
